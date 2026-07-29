@@ -1,0 +1,10 @@
+# Bỏ qua toàn bộ nội dung trong thư mục project
+/*
+
+# Chỉ cho phép các file cần đưa lên GitHub
+!/.gitignore
+!/SHA256.v
+!/tb_SHA256.v
+
+# Cho phép README nếu tạo sau này
+!/README.md
