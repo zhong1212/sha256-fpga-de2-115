@@ -5,6 +5,7 @@
 !/.gitignore
 !/SHA256.v
 !/tb_SHA256.v
+!/de2_115_zonal_top.v
 
 # Cho phép README nếu tạo sau này
 !/README.md
