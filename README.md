@@ -47,6 +47,49 @@ dành cho mạng In-Vehicle Network (IVN). Kiến trúc tổng thể chia thành
 
 ---
 
+## Quy trình test băng thông mạng giữa 2 thiết bị
+## 🟢 VÒNG 0: Kiểm tra Kết nối Vật lý & Loopback
+
+### Mục đích
+
+* Xác minh đường truyền cáp mạng và chip PHY Marvell trên bo mạch DE2-115 hoạt động ổn định ở tốc độ cao (Gigabit - 125MHz).
+* Kiểm tra khả năng đồng bộ hóa phần cứng thông qua việc ghép nối dữ liệu RGMII (chuyển đổi 4-bit DDR sang 8-bit SDR sử dụng lõi IP cứng ALTDDIO_IN của Intel).
+
+### Cơ chế hoạt động
+
+* Mạch hoạt động theo cơ chế phản hồi thô (Loopback trực tiếp): Nhận toàn bộ gói tin ở cổng RX và đẩy nguyên xi ra cổng TX, đảm bảo cáp thông mạch, không suy hao tín hiệu và không xảy ra hiện tượng mất dữ liệu thô (bit error) giữa Pi 5 và FPGA.
+
+
+## 🔵 VÒNG 1: Bộ Bóc Tách Gói Tin & Tường Lửa Một Chiều
+
+### Mục đích
+
+* Tích hợp máy trạng thái hữu hạn (FSM Parser) vào FPGA để biến thiết bị thành bộ phân tách gói tin ở tầng mạng.
+* Khóa chặt hoàn toàn kênh phát (ENET0_TX_EN = 0) để xây dựng mô hình tường lửa một chiều (Simplex Firewall), chuyên tập trung kiểm duyệt luồng dữ liệu đầu vào.
+
+### Kết quả & Trực quan hóa qua LED
+
+* Dàn đèn LED xanh (LEDG): Hiển thị trực quan tiến trình xác thực (trạng thái nhận sóng, nhận diện port, IP và nội dung payload).
+* Dàn đèn LED đỏ (LEDR): Hiển thị chính xác chiều dài khung Ethernet (Packet Length) của gói tin đi qua.
+* Cờ PASS (LEDG[8]): Hệ thống chỉ kích hoạt khi và chỉ khi nhận diện chính xác gói tin UDP hợp lệ chứa đúng địa chỉ IP đích, số cổng Port và chuỗi định danh "SPARK".
+
+
+## 📊 Bảng Chẩn Đoán Trạng Thái LED (Diagnostic Panel)
+
+| **Tên Đèn**      | **Tín hiệu / Logic trong Code**         | **Ý nghĩa trạng thái chẩn đoán**                                                            |
+| ---------------- | --------------------------------------- | ------------------------------------------------------------------------------------------- |
+| **`LEDG[0]`**    | `clk_cnt[26]` (Nháy 1Hz)                | Báo hiệu xung nhịp hệ thống 125MHz từ chân RX_CLK đang sống và hoạt động bình thường.       |
+| **`LEDG[1]`**    | `(stretch_raw > 0)`                     | Nháy chớp báo hiệu **có gói tin thô** đang đập vào cổng nhận (RX).                          |
+| **`LEDG[2]`**    | `phy_rst_n`                             | Sáng cố định khi chip PHY Marvell đã được cấp xung reset thành công (Sẵn sàng hoạt động).   |
+| **`LEDG[3]`**    | `(stretch_pass > 0) & latched_state[1]` | Sáng lên khi FSM bóc tách và **bắt trúng Port mạng** hợp lệ.                                |
+| **`LEDG[4]`**    | `(stretch_pass > 0) & latched_state[2]` | Sáng lên khi FSM bóc tách và **bắt trúng Địa chỉ IP** hợp lệ.                               |
+| **`LEDG[5]`**    | `(stretch_pass > 0) & latched_state[3]` | Sáng lên khi FSM bóc tách và **bắt trúng chuỗi "SPARK"**.                                   |
+| **`LEDG[7:6]`**  | `2'b00`                                 | Dự phòng (Đang tắt).                                                                        |
+| **`LEDG[8]`**    | `(stretch_pass > 0)`                    | **CỜ PASS TOÀN DIỆN:** Sáng rực rỡ 1.2 giây khi gói tin vượt qua toàn bộ tường lửa bảo mật. |
+| **`LEDR[15:0]`** | `Packet Length Register`                | Hiển thị kích thước (tính bằng byte) của gói tin nhận được.                                 |
+
+
+
 ## 🧱 Verilog Modules Breakdown / Structure Mã Nguồn
 
 Dự án được mô-đun hóa hoàn toàn theo kiến trúc HDL chuẩn công nghiệp:
