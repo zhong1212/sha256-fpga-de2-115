@@ -7,5 +7,7 @@
 !/tb_SHA256.v
 !/de2_115_zonal_top.v
 !/phy_rgmii_interface.v
+!/udp_rx_parser.v
+
 # Cho phép README nếu tạo sau này
 !/README.md
