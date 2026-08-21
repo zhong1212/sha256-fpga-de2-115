@@ -69,32 +69,50 @@ Data Plane - FPGA DE2-115:
 | Crypto Standard | SHA-256 Hasher (Pipelined 512-bit block processing) & ECC hardware accelerator |
 ---
 
-## Quy trình test băng thông mạng giữa 2 thiết bị
-## 🟢 VÒNG 0: Kiểm tra Kết nối Vật lý & Loopback
+## 🧪 5-Stage Verification Roadmap / Lộ trình 5 vòng kiểm thử
 
-### Mục đích
+🔹 Vòng 0: Hardware-level Loopback
+  Mục tiêu:
+  Kiểm chứng chất lượng đường truyền cáp vật lý và tính đúng đắn của khối
+  IP cứng RGMII DDR (ALTDDIO_IN / ALTDDIO_OUT) trên FPGA.
 
-* Xác minh đường truyền cáp mạng và chip PHY Marvell trên bo mạch DE2-115 hoạt động ổn định ở tốc độ cao (Gigabit - 125MHz).
-* Kiểm tra khả năng đồng bộ hóa phần cứng thông qua việc ghép nối dữ liệu RGMII (chuyển đổi 4-bit DDR sang 8-bit SDR sử dụng lõi IP cứng ALTDDIO_IN của Intel).
+  Cách kiểm thử:
+  Nối tắt trực tiếp đường ra của bộ nhận mạng RX Parser Output sang
+  đầu vào của bộ phát mạng TX Framer Input ngay tại module Top-level
+  của FPGA, bỏ qua hoàn toàn các khối lọc an ninh và mật mã.
 
-### Cơ chế hoạt động
+  Kết quả kỳ vọng:
+  Pi 5 gửi các chuỗi byte thô thử nghiệm (ví dụ: 0xDEADBEEF) qua Ethernet
+  và nhận lại chính xác 100% nội dung phản hồi không bị suy hao hay trượt bit.
 
-* Mạch hoạt động theo cơ chế phản hồi thô (Loopback trực tiếp): Nhận toàn bộ gói tin ở cổng RX và đẩy nguyên xi ra cổng TX, đảm bảo cáp thông mạch, không suy hao tín hiệu và không xảy ra hiện tượng mất dữ liệu thô (bit error) giữa Pi 5 và FPGA.
+🔹 Vòng 1: Tường Lửa Một Chiều & Lọc Rác Mạng
+  Mục tiêu:
+  Kích hoạt màng lọc an ninh thời gian thực (FSM Parser) để cô lập hoàn
+  toàn các gói tin rác nền tự sinh từ hệ điều hành Linux (mDNS, IPv6,
+  ARP...) và chỉ tiếp nhận gói tin SPARK hợp lệ.
 
+  Cách kiểm thử:
+  Cấu hình IP và ARP tĩnh cứng trên Pi 5. Tiến hành giám sát trạng thái
+  rỗi và bắn gói tin SPARK chuẩn mang chữ ký nhận diện "SPRK"
+  hướng tới UDP Port 1234 trên FPGA.
 
-## 🔵 VÒNG 1: Bộ Bóc Tách Gói Tin & Tường Lửa Một Chiều
+  Kết quả kỳ vọng:
+  Khi Pi 5 rỗi hoặc phát rác nền, hệ thống im lặng hoàn toàn (LED đỏ/xanh
+  tắt). Khi bắn đúng gói tin SPARK, LED xanh chẩn đoán LEDG[8] lập tức
+  chớp sáng 1.2 giây và dàn LED đỏ LEDR[15:0] chốt hiển thị chính xác
+  chiều dài gói tin dưới dạng nhị phân.
 
-### Mục đích
+🔹 Vòng 2: Tích Hợp Động Cơ Băm Mật Mã Cứng (SHA-256 Hasher Offloading)
+  Mục tiêu:
+  Hiện thực hóa khả năng gia tốc băm tính toàn vẹn gói tin bằng cách
+  ghép nối an toàn bộ lọc mạng với lõi tính toán SHA-256 phần cứng. 
 
-* Tích hợp máy trạng thái hữu hạn (FSM Parser) vào FPGA để biến thiết bị thành bộ phân tách gói tin ở tầng mạng.
-* Khóa chặt hoàn toàn kênh phát (ENET0_TX_EN = 0) để xây dựng mô hình tường lửa một chiều (Simplex Firewall), chuyên tập trung kiểm duyệt luồng dữ liệu đầu vào.
+  Kết quả kỳ vọng:
+  Kết quả băm 256-bit (Digest) trả về từ FPGA trùng khớp hoàn toàn từng
+  bit với giá trị tính toán phần mềm tương ứng chạy trên Pi 5 đối với
+  cùng một gói tin Payload.
 
-### Kết quả & Trực quan hóa qua LED
-
-* Dàn đèn LED xanh (LEDG): Hiển thị trực quan tiến trình xác thực (trạng thái nhận sóng, nhận diện port, IP và nội dung payload).
-* Dàn đèn LED đỏ (LEDR): Hiển thị chính xác chiều dài khung Ethernet (Packet Length) của gói tin đi qua.
-* Cờ PASS (LEDG[8]): Hệ thống chỉ kích hoạt khi và chỉ khi nhận diện chính xác gói tin UDP hợp lệ chứa đúng địa chỉ IP đích, số cổng Port và chuỗi định danh "SPARK".
-
+---
 
 ## 📊 Bảng Chẩn Đoán Trạng Thái LED (Diagnostic Panel)
 
@@ -112,44 +130,5 @@ Data Plane - FPGA DE2-115:
 
 
 
-## 🧱 Verilog Modules Breakdown / Structure Mã Nguồn
 
-Dự án được mô-đun hóa hoàn toàn theo kiến trúc HDL chuẩn công nghiệp:
 
-- 📂 **`de2_115_zonal_top.v`**: Top-level module quản lý phân phối Clock (50MHz System / 25MHz MII TX), Power-On Auto Reset cho IC PHY Marvell (10ms Pulse), và bộ hiển thị trạng thái LED Telemetry (100ms Pulse Stretcher).
-- 📂 **`SHA256.v`**: Lõi băm SHA-256 thuần Verilog tuân thủ FIPS 180-4. Tích hợp bộ tính toán lịch thông điệp $W_t$ ($0 \rightarrow 63$), đường dữ liệu 8 thanh ghi trạng thái $A \rightarrow H$ và FSM điều khiển 64 vòng băm.
-- 📂 **`udp_sha256_bridge.v`**: Bộ điều phối luồng dữ liệu trung tâm tích hợp các mạch **Clock Domain Crossing (CDC) Pulse Synchronizer** giúp chuyển đổi tín hiệu an toàn giữa các miền xung Clock ($25\text{ MHz}$ RX/TX Clock và $50\text{ MHz}$ System Clock).
-- 📂 **`udp_rx_parser.v`**: Máy trạng thái (FSM) bóc tách gói tin L2/L3/L4. Tự động lọc địa chỉ MAC, IP đích, UDP Port và trích xuất đúng 64 Bytes (512 bits) Payload để bắn sang lõi SHA-256.
-- 📂 **`udp_tx_framer.v`**: Bộ đóng gói khung truyền ngược về Host. Tự động sinh gói tin ARP Reply (khi Host hỏi ARP) và đóng gói UDP Packet chứa 1 Byte Status (`0xAA`) kèm 32 Bytes Digest SHA-256.
-- 📂 **`phy_rgmii_interface.v`**: Khối giao tiếpPHY tầng thấp, xử lý biến đổi MII Nibble (4-bit @ 25MHz) thành GMII Byte (8-bit) với khả năng tự động đồng bộ pha Preamble (`0xD5`).
-- 📂 **`gateway_host.py`**: Script Python trên Pi 5 chịu trách nhiệm thực hiện Padding chuẩn FIPS 180-4 cho chuỗi đầu vào ASCII, đóng gói UDP Payload (`0x01` + 64-byte block), bắn qua Socket `SO_BINDTODEVICE` và đo đạc Round-trip Latency.
-
----
-
-## 🧪 Verification & Standard Test Vectors / Kiểm Thử
-
-Hệ thống được xác minh tính đúng đắn dựa trên chuỗi thử nghiệm tiêu chuẩn của **NIST FIPS 180-4**:
-
-### NIST Test Case 1: Input `"abc"`
-- **ASCII Input:** `"abc"`
-- **Hex Payload (512-bit Block sau Padding):**
-  `61626380000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000018`
-- **Expected SHA-256 Digest:**
-  `ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad`
-
-```bash
-# Kết quả thực thi trên Terminal Raspberry Pi 5
-$ sudo ./env/bin/python3 gateway_host.py
-
-=================================================================
-[*] Chuỗi đầu vào (ASCII) : 'abc'
-[*] Độ dài Padding       : 64 bytes (512 bits)
-[*] Payload Hex (512-bit) : 6162638000000000...00000018
-=================================================================
-[*] Đang gửi UDP Payload (65 bytes) tới FPGA (192.168.137.200:5000)...
-
-[+] THÀNH CÔNG! NHẬN PHẢN HỒI TỪ FPGA [192.168.137.200:5000]
-[+] Thời gian xử lý vòng (Round-trip Latency): 142.850 µs
-[+] Status Return : 0xAA (0xAA = Success)
-[+] SHA-256 Digest: ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad
-[✓] CHECKPOINT PASSED: Mã băm khớp 100% với đáp án tiêu chuẩn NIST!
