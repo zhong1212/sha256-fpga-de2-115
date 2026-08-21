@@ -117,19 +117,20 @@ chính xác chiều dài gói tin dưới dạng nhị phân.
 
 ## 📊 Bảng Chẩn Đoán Trạng Thái LED (Diagnostic Panel)
 
-| **Tên Đèn**      | **Tín hiệu / Logic trong Code**         | **Ý nghĩa trạng thái chẩn đoán**                                                            |
-| ---------------- | --------------------------------------- | ------------------------------------------------------------------------------------------- |
-| **`LEDG[0]`**    | `clk_cnt[26]` (Nháy 1Hz)                | Báo hiệu xung nhịp hệ thống 125MHz từ chân RX_CLK đang sống và hoạt động bình thường.       |
-| **`LEDG[1]`**    | `(stretch_raw > 0)`                     | Nháy chớp báo hiệu **có gói tin thô** đang đập vào cổng nhận (RX).                          |
-| **`LEDG[2]`**    | `phy_rst_n`                             | Sáng cố định khi chip PHY Marvell đã được cấp xung reset thành công (Sẵn sàng hoạt động).   |
-| **`LEDG[3]`**    | `(stretch_pass > 0) & latched_state[1]` | Sáng lên khi FSM bóc tách và **bắt trúng Port mạng** hợp lệ.                                |
-| **`LEDG[4]`**    | `(stretch_pass > 0) & latched_state[2]` | Sáng lên khi FSM bóc tách và **bắt trúng Địa chỉ IP** hợp lệ.                               |
-| **`LEDG[5]`**    | `(stretch_pass > 0) & latched_state[3]` | Sáng lên khi FSM bóc tách và **bắt trúng chuỗi "SPARK"**.                                   |
-| **`LEDG[7:6]`**  | `2'b00`                                 | Dự phòng (Đang tắt).                                                                        |
-| **`LEDG[8]`**    | `(stretch_pass > 0)`                    | **CỜ PASS TOÀN DIỆN:** Sáng rực rỡ 1.2 giây khi gói tin vượt qua toàn bộ tường lửa bảo mật. |
-| **`LEDR[15:0]`** | `Packet Length Register`                | Hiển thị kích thước (tính bằng byte) của gói tin nhận được.                                 |
-
-
-
-
-
+| Tên Đèn | Tín hiệu / Logic trong Code | Ý nghĩa trạng thái chẩn đoán |
+| :--- | :--- | :--- |
+| **`LEDG[0]`** | `clk_cnt[26]` (Nháy 1Hz) | Báo hiệu xung nhịp hệ thống 125MHz từ chân RX_CLK đang
+ sống và hoạt động bình thường. |
+| **`LEDG[1]`** | `(stretch_raw > 0)` | Nháy chớp báo hiệu có gói tin thô đang đập vào cổng RX. |
+| **`LEDG[2]`** | `phy_rst_n` | Sáng cố định khi chip PHY Marvell đã được cấp xung reset thành công. |
+| **`LEDG[3]`** | `(stretch_pass > 0) & latched_state[1]` | Sáng lên khi FSM bóc tách và bắt trúng 
+Port mạng hợp lệ. |
+| **`LEDG[4]`** | `(stretch_pass > 0) & latched_state[2]` | Sáng lên khi FSM bóc tách và bắt trúng 
+Địa chỉ IP hợp lệ. |
+| **`LEDG[5]`** | `(stretch_pass > 0) & latched_state[3]` | Sáng lên khi FSM bóc tách và bắt trúng
+ chuỗi "SPARK". |
+| **`LEDG[7:6]`** | `2'b00` | Dự phòng (Đang tắt). |
+| **`LEDG[8]`** | `(stretch_pass > 0)` | CỜ PASS TOÀN DIỆN: Sáng 1.2 giây khi gói tin vượt qua toàn bộ
+ tường lửa bảo mật. |
+| **`LEDR[15:0]`** | `Packet Length Register` | Hiển thị kích thước (tính bằng byte) của gói tin 
+nhận được. |
