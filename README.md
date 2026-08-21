@@ -37,35 +37,24 @@ giải phóng 100% tài nguyên CPU của Host.
 ---
 
 ## 🏗️ System Architecture / Kiến Trúc Hệ Thống
-Zonal Gateway được nâng cấp để trở thành hạt nhân xử lý của hệ thống, chuyển
-toàn bộ công việc tính toán sang FPGA, Pi 5 chỉ còn đóng vai trò điều phối.
-Kiến trúc nâng cấp cụ thể gồm 2 phần:
+Zonal Gateway được nâng cấp để trở thành hạt nhân xử lý của hệ thống,
+chuyển toàn bộ công việc tính toán sang FPGA, Pi 5 chỉ còn đóng vai trò
+điều phối. Kiến trúc nâng cấp cụ thể gồm 2 phần:
 
---------------------------------------------------------------------------------
-1. Control Plane - Raspberry Pi 5
---------------------------------------------------------------------------------
-* Nhiệm vụ:
-  Điều phối toàn bộ hoạt động của hệ thống.
+Control Plane - Raspberry Pi 5:
 
-* Chức năng:
-  - Thu thập bằng chứng xác thực từ các ECU con.
-  - Quản lý phiên xác thực.
-  - Giao tiếp trực tiếp với TPM 2.0 qua bus SPI.
-  - Đóng gói các tác vụ này thành các Crypto Jobs để chuyển tiếp xuống FPGA
-    qua kết nối Gigabit Ethernet.
+- Nhiệm vụ: Điều phối toàn bộ hoạt động của hệ thống
+- Chức năng: Thu thập bằng chứng xác thực từ các ECU con, quản lý phiên xác thực,
+  và giao tiếp trực tiếp với TPM 2.0 qua bus SPI. Sau đó, Pi 5 đóng gói
+  các tác vụ này thành các Crypto Jobs để chuyển tiếp xuống FPGA qua
+  kết nối Gigabit Ethernet.
 
---------------------------------------------------------------------------------
-2. Mặt phẳng Dữ liệu (Data Plane - FPGA DE2-115)
---------------------------------------------------------------------------------
-* Nhiệm vụ:
-  Tăng tốc quá trình tính toán mật mã và bộ lọc mạng.
-
-* Chức năng:
-  - Nhận Crypto Jobs từ Pi 5.
-  - Tự động nhận diện và lọc bỏ gói tin rác ở tốc độ đường truyền.
-  - Dữ liệu hợp lệ được đẩy vào động cơ băm SHA-256 thiết kế dạng Pipelined
-    512-bit, từ đó tính toán phản hồi với độ trễ tối thiểu.
-  - Giải phóng hoàn toàn tài nguyên CPU cho Host.
+Data Plane - FPGA DE2-115:
+- Nhiệm vụ: Tăng tốc quá trình tính toán mật mã và bộ lọc mạng
+- Chức năng: Nhận Crypto Jobs từ Pi 5, sau đó tự động nhận diện và lọc bỏ gói tin
+  rác ở tốc độ đường truyền. Dữ liệu hợp lệ được đẩy vào động cơ băm
+  SHA-256 thiết kế dạng Pipelined 512-bit, từ đó tính toán phản hồi
+  với độ trễ tối thiểu, giải phóng hoàn toàn tài nguyên CPU cho Host.
 
 ---
 
