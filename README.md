@@ -27,26 +27,46 @@ tin Ethernet hay tính toán phép nhân điểm đường cong elliptic (ECC) c
 dụng 1 lượng tài nguyên tính toán rất lớn của CPU, làm giảm đi đáng kể tốc
 độ tính toán, ảnh hưởng chung tới toàn bộ quá trình xác thực.
 
-Vì vậy, dự án này triển khai một nút Zonal Gateway Offloading phần cứng trên
+Vì vậy, dự án này tập trung vào việc tăng tốc quá trình tính toán mật mã
+thông qua việc triển khai một nút Zonal Gateway Offloading phần cứng trên
 FPGA DE2-115, giao tiếp trực tiếp với Host Gateway (Raspberry Pi 5) qua kết
 nối Ethernet MII/UDP. Toàn bộ quá trình bóc tách gói tin L2-L4 và tính toán
-mã băm SHA-256 với 512-bit block được thực hiện hoàn toàn ở tầng hardware,
+mã băm SHA-256 với 512-bit block, được thực hiện hoàn toàn ở tầng hardware,
 giải phóng 100% tài nguyên CPU của Host.
 
 ---
 
 ## 🏗️ System Architecture / Kiến Trúc Hệ Thống
-Dự án này là phân hệ cốt lõi (Phase 1) nằm trong kiến trúc SPARK Protocol Host 
-dành cho mạng In-Vehicle Network (IVN). Kiến trúc tổng thể chia thành 3 vùng:
+Zonal Gateway được nâng cấp để trở thành hạt nhân xử lý của hệ thống, chuyển
+toàn bộ công việc tính toán sang FPGA, Pi 5 chỉ còn đóng vai trò điều phối.
+Kiến trúc nâng cấp cụ thể gồm 2 phần:
 
-1. In-Vehicle Network (IVN): Bao gồm các ECU giao tiếp qua bus CAN / CAN FD. 
-   Các ECU này gửi dữ liệu xác thực (L_k, R_k) tới Zonal Gateway.
-2. Raspberry Pi 5 (Edge Device / Zonal Gateway): Đóng vai trò là Host thu thập 
-   dữ liệu từ mạng CAN và đóng gói thành các Crypto Jobs. Dữ liệu được truyền 
-   tải qua giao diện Gigabit Ethernet tới FPGA.
-3. FPGA DE2-115 (Crypto Accelerator): Đảm nhiệm xử lý phần cứng toàn bộ các 
-   phép toán mật mã nặng. Khối SHA-256 Hasher được thiết kế dạng Pipelined, 
-   giúp tăng tốc độ xử lý từ 0.32 ms xuống chỉ còn ~0.05 ms (tăng tốc 6x).
+--------------------------------------------------------------------------------
+1. Control Plane - Raspberry Pi 5
+--------------------------------------------------------------------------------
+* Nhiệm vụ:
+  Điều phối toàn bộ hoạt động của hệ thống.
+
+* Chức năng:
+  - Thu thập bằng chứng xác thực từ các ECU con.
+  - Quản lý phiên xác thực.
+  - Giao tiếp trực tiếp với TPM 2.0 qua bus SPI.
+  - Đóng gói các tác vụ này thành các Crypto Jobs để chuyển tiếp xuống FPGA
+    qua kết nối Gigabit Ethernet.
+
+--------------------------------------------------------------------------------
+2. Mặt phẳng Dữ liệu (Data Plane - FPGA DE2-115)
+--------------------------------------------------------------------------------
+* Nhiệm vụ:
+  Tăng tốc quá trình tính toán mật mã và bộ lọc mạng.
+
+* Chức năng:
+  - Nhận Crypto Jobs từ Pi 5.
+  - Tự động nhận diện và lọc bỏ gói tin rác ở tốc độ đường truyền.
+  - Dữ liệu hợp lệ được đẩy vào động cơ băm SHA-256 thiết kế dạng Pipelined
+    512-bit, từ đó tính toán phản hồi với độ trễ tối thiểu.
+  - Giải phóng hoàn toàn tài nguyên CPU cho Host.
+
 ---
 
 ## 💻 Technical Specifications / Thông Số Kỹ Thuật
