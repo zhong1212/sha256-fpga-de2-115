@@ -71,17 +71,15 @@ Data Plane - FPGA DE2-115:
 
 ## 🧪 5-Stage Verification Roadmap / Lộ trình 5 vòng kiểm thử
 
-======================================================================
 🔹 Vòng 0: Hardware-level Loopback
-======================================================================
 
 * Mục tiêu:
   Kiểm chứng chất lượng đường truyền cáp vật lý và tính đúng đắn
   của khối IP cứng RGMII DDR (ALTDDIO_IN / ALTDDIO_OUT) trên FPGA.
 
 * Cách kiểm thử:
-  Nối tắt trực tiếp đường ra của bộ nhận mạng RX Parser Output sang
-  đầu vào của bộ phát mạng TX Framer Input ngay tại module
+  Nối tắt trực tiếp đường ra của bộ nhận mạng RX Parser sang
+  đầu vào của bộ phát mạng TX Framer ngay tại module
   Top-level của FPGA, bỏ qua hoàn toàn các khối lọc an ninh và mật mã.
 
 * Kết quả kỳ vọng:
@@ -89,29 +87,22 @@ Data Plane - FPGA DE2-115:
   Ethernet và nhận lại chính xác 100% nội dung phản hồi không bị
   suy hao hay trượt bit.
 
-======================================================================
-🔹 Vòng 1: Tường lửa một chiều & Lọc rác mạng
-======================================================================
+🔹 Vòng 1: Tường lửa một chiều (Simplex Firewall)
 
 * Mục tiêu:
-  Kích hoạt màng lọc an ninh thời gian thực (FSM Parser) để cô lập
-  hoàn toàn các gói tin rác nền tự sinh từ hệ điều hành Linux
-  (mDNS, IPv6, ARP...) và chỉ tiếp nhận gói tin SPARK hợp lệ.
+Kiểm chứng FSM Parser lọc bỏ 100% gói rác nền (ARP, mDNS, IPv6...)
+ở tốc độ 1 Gbps, chỉ tiếp nhận gói tin SPARK hợp lệ.
 
-* Cách kiểm thử:
-  Cấu hình IP và ARP tĩnh cứng trên Pi 5. Tiến hành giám sát trạng
-  thái rỗi và bắn gói tin SPARK chuẩn mang chữ ký nhận diện
-  "SPRK" hướng tới UDP Port 1234 trên FPGA.
+* Kiểm thử:
+Gán IP/ARP tĩnh trên Pi 5. Bắn gói tin UDP chứa mã "SPRK"
+hướng tới Port 1234 trên FPGA.
 
 * Kết quả kỳ vọng:
-  Khi Pi 5 rỗi hoặc phát rác nền, hệ thống im lặng hoàn toàn (LED
-  đỏ/xanh tắt). Khi bắn đúng gói tin SPARK, LED xanh chẩn đoán
-  LEDG[8] lập tức chớp sáng 1.2 giây và dàn LED đỏ LEDR[15:0] chốt
-  hiển thị chính xác chiều dài gói tin dưới dạng nhị phân.
+Gói rác hoặc trạng thái tĩnh: Toàn bộ LED tắt hoàn toàn.
+Gói SPARK hợp lệ: LEDG[8] sáng 1.2s; hàng LEDR[15:0] hiển thị
+chính xác chiều dài gói tin dưới dạng nhị phân.
 
-======================================================================
 🔹 Vòng 2: Tích hợp lõi mật mã SHA-256
-======================================================================
 
 * Mục tiêu:
   Hiện thực hóa khả năng gia tốc băm tính toàn vẹn gói tin bằng
