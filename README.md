@@ -1,7 +1,6 @@
 \# ⚡ FPGA-Accelerated SHA-256 Zonal Gateway Node
 
 > **In-Line Hardware Cryptographic Offloading over UDP/IP Stack on Altera Cyclone IV DE2-115 & Raspberry Pi 5**
-
 ![FPGA](https://img.shields.io/badge/FPGA-Altera%20Cyclone%20IV%20EP4CE115-blue)
 ![Language](https://img.shields.io/badge/HDL-Verilog%20HDL-orange)
 ![Host](https://img.shields.io/badge/Host-Raspberry%20Pi%205%20(Linux)-red)
@@ -12,9 +11,27 @@
 
 ## 📌 Executive Summary / Tổng Quan Dự Án
 
-Trong kiến trúc mạng ô tô hiện đại (Automotive Zonal Architecture) và mạng IoT Edge, các nút **Zonal Gateway** phải xử lý khối lượng lớn dữ liệu cần xác thực tính toàn vẹn (Integrity Verification) với độ trễ cực thấp (Deterministic Low-Latency). Việc tính toán các hàm băm mật mã như **SHA-256** hoàn toàn bằng phần mềm (Software Engine) trên CPU Gateway tạo ra nghẽn cổ đống (CPU Overhead) và biến động độ trễ (Jitter).
+Trong kiến trúc mạng ô tô hiện đại (Automotive Zonal Architecture), kiến
+trúc mạng nội bộ (IVNs) đang dịch chuyển mạnh mẽ từ mô hình Domain Architecture
+sang mô hình Zonal Architecture. Ở đó, thay vì gom nhóm theo chức năng của
+xe, các ECU con được gom nhóm vật lý theo các vùng cục bộ và kết nối trực
+tiếp với một Zonal Gateway ở biên thông qua các giao thức bus tốc độ thấp
+như CAN, CAN FD, CAN XL, và được đảm bảo an toàn vận hành bằng giao thức
+Anonymous Swarm Attestation, giúp chứng minh toàn bộ nhóm ECU hoạt động bình
+thường mà không để lộ bất kỳ thông tin nào của từng ECU, đồng thời bảo vệ
+tuyệt đối cấu hình firmware của các nhà cung cấp linh kiện.
 
-Dự án này triển khai một nút **Zonal Gateway Offloading phần cứng trên FPGA DE2-115**, giao tiếp trực tiếp với **Host Gateway (Raspberry Pi 5)** qua kết nối Ethernet MII/UDP. Toàn bộ quá trình bóc tách gói tin L2-L4 và tính toán mã băm SHA-256 (512-bit block) được thực hiện hoàn toàn ở tầng hardware (In-Line Pipeline), giải phóng 100% tài nguyên CPU của Host.
+Tuy nhiên, khi thực hiện giao thức trên bằng phần mềm thuần túy (chỉ dùng
+Pi 4, Pi 5,…), việc tính toán các hàm băm mật mã như SHA-256, bóc tách gói
+tin Ethernet hay tính toán phép nhân điểm đường cong elliptic (ECC) chiếm
+dụng 1 lượng tài nguyên tính toán rất lớn của CPU, làm giảm đi đáng kể tốc
+độ tính toán, ảnh hưởng chung tới toàn bộ quá trình xác thực.
+
+Vì vậy, dự án này triển khai một nút Zonal Gateway Offloading phần cứng trên
+FPGA DE2-115, giao tiếp trực tiếp với Host Gateway (Raspberry Pi 5) qua kết
+nối Ethernet MII/UDP. Toàn bộ quá trình bóc tách gói tin L2-L4 và tính toán
+mã băm SHA-256 với 512-bit block, được thực hiện hoàn toàn ở tầng hardware,
+giải phóng 100% tài nguyên CPU của Host.
 
 ---
 
