@@ -30,7 +30,7 @@ dụng 1 lượng tài nguyên tính toán rất lớn của CPU, làm giảm đ
 Vì vậy, dự án này triển khai một nút Zonal Gateway Offloading phần cứng trên
 FPGA DE2-115, giao tiếp trực tiếp với Host Gateway (Raspberry Pi 5) qua kết
 nối Ethernet MII/UDP. Toàn bộ quá trình bóc tách gói tin L2-L4 và tính toán
-mã băm SHA-256 với 512-bit block, được thực hiện hoàn toàn ở tầng hardware,
+mã băm SHA-256 với 512-bit block được thực hiện hoàn toàn ở tầng hardware,
 giải phóng 100% tài nguyên CPU của Host.
 
 ---
