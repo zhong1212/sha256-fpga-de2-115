@@ -71,47 +71,57 @@ Data Plane - FPGA DE2-115:
 
 ## 🧪 5-Stage Verification Roadmap / Lộ trình 5 vòng kiểm thử
 
+======================================================================
 🔹 Vòng 0: Hardware-level Loopback
-  Mục tiêu:
-  Kiểm chứng chất lượng đường truyền cáp vật lý và tính đúng đắn của khối
-  IP cứng RGMII DDR (ALTDDIO_IN / ALTDDIO_OUT) trên FPGA.
+======================================================================
 
-  Cách kiểm thử:
+* Mục tiêu:
+  Kiểm chứng chất lượng đường truyền cáp vật lý và tính đúng đắn
+  của khối IP cứng RGMII DDR (ALTDDIO_IN / ALTDDIO_OUT) trên FPGA.
+
+* Cách kiểm thử:
   Nối tắt trực tiếp đường ra của bộ nhận mạng RX Parser Output sang
-  đầu vào của bộ phát mạng TX Framer Input ngay tại module Top-level
-  của FPGA, bỏ qua hoàn toàn các khối lọc an ninh và mật mã.
+  đầu vào của bộ phát mạng TX Framer Input ngay tại module
+  Top-level của FPGA, bỏ qua hoàn toàn các khối lọc an ninh và mật mã.
 
-  Kết quả kỳ vọng:
-  Pi 5 gửi các chuỗi byte thô thử nghiệm (ví dụ: 0xDEADBEEF) qua Ethernet
-  và nhận lại chính xác 100% nội dung phản hồi không bị suy hao hay trượt bit.
+* Kết quả kỳ vọng:
+  Pi 5 gửi các chuỗi byte thô thử nghiệm (ví dụ: 0xDEADBEEF) qua
+  Ethernet và nhận lại chính xác 100% nội dung phản hồi không bị
+  suy hao hay trượt bit.
 
-🔹 Vòng 1: Tường Lửa Một Chiều & Lọc Rác Mạng
-  Mục tiêu:
-  Kích hoạt màng lọc an ninh thời gian thực (FSM Parser) để cô lập hoàn
-  toàn các gói tin rác nền tự sinh từ hệ điều hành Linux (mDNS, IPv6,
-  ARP...) và chỉ tiếp nhận gói tin SPARK hợp lệ.
+======================================================================
+🔹 Vòng 1: Tường lửa một chiều & Lọc rác mạng
+======================================================================
 
-  Cách kiểm thử:
-  Cấu hình IP và ARP tĩnh cứng trên Pi 5. Tiến hành giám sát trạng thái
-  rỗi và bắn gói tin SPARK chuẩn mang chữ ký nhận diện "SPRK"
-  hướng tới UDP Port 1234 trên FPGA.
+* Mục tiêu:
+  Kích hoạt màng lọc an ninh thời gian thực (FSM Parser) để cô lập
+  hoàn toàn các gói tin rác nền tự sinh từ hệ điều hành Linux
+  (mDNS, IPv6, ARP...) và chỉ tiếp nhận gói tin SPARK hợp lệ.
 
-  Kết quả kỳ vọng:
-  Khi Pi 5 rỗi hoặc phát rác nền, hệ thống im lặng hoàn toàn (LED đỏ/xanh
-  tắt). Khi bắn đúng gói tin SPARK, LED xanh chẩn đoán LEDG[8] lập tức
-  chớp sáng 1.2 giây và dàn LED đỏ LEDR[15:0] chốt hiển thị chính xác
-  chiều dài gói tin dưới dạng nhị phân.
+* Cách kiểm thử:
+  Cấu hình IP và ARP tĩnh cứng trên Pi 5. Tiến hành giám sát trạng
+  thái rỗi và bắn gói tin SPARK chuẩn mang chữ ký nhận diện
+  "SPRK" hướng tới UDP Port 1234 trên FPGA.
 
-🔹 Vòng 2: Tích Hợp Động Cơ Băm Mật Mã Cứng (SHA-256 Hasher Offloading)
-  Mục tiêu:
-  Hiện thực hóa khả năng gia tốc băm tính toàn vẹn gói tin bằng cách
-  ghép nối an toàn bộ lọc mạng với lõi tính toán SHA-256 phần cứng. 
+* Kết quả kỳ vọng:
+  Khi Pi 5 rỗi hoặc phát rác nền, hệ thống im lặng hoàn toàn (LED
+  đỏ/xanh tắt). Khi bắn đúng gói tin SPARK, LED xanh chẩn đoán
+  LEDG[8] lập tức chớp sáng 1.2 giây và dàn LED đỏ LEDR[15:0] chốt
+  hiển thị chính xác chiều dài gói tin dưới dạng nhị phân.
 
-  Kết quả kỳ vọng:
-  Kết quả băm 256-bit (Digest) trả về từ FPGA trùng khớp hoàn toàn từng
-  bit với giá trị tính toán phần mềm tương ứng chạy trên Pi 5 đối với
-  cùng một gói tin Payload.
+======================================================================
+🔹 Vòng 2: Tích hợp lõi mật mã SHA-256
+======================================================================
 
+* Mục tiêu:
+  Hiện thực hóa khả năng gia tốc băm tính toàn vẹn gói tin bằng
+  cách ghép nối an toàn bộ lọc mạng với lõi tính toán SHA-256
+  phần cứng.
+
+* Kết quả kỳ vọng:
+  Kết quả băm 256-bit trả về từ FPGA trùng khớp hoàn toàn
+  từng bit với giá trị tính toán phần mềm tương ứng chạy trên
+  Pi 5 đối với cùng một gói tin Payload.
 ---
 
 ## 📊 Bảng Chẩn Đoán Trạng Thái LED (Diagnostic Panel)
