@@ -58,19 +58,15 @@ Data Plane - FPGA DE2-115:
 
 ---
 
-## 💻 Technical Specifications / Thông Số Kỹ Thuật
+## 💻 System Configuration / Cấu hình hệ thống
 
-| Hạng mục | Thông số chi tiết |
+| Hạng mục | Thông số cấu hình |
 | :--- | :--- |
-| **FPGA Board** | Terasic DE2-115 (Altera Cyclone IV EP4CE115F29C7) |
-| **Host System** | Raspberry Pi 5 (Raspberry Pi OS 64-bit / Linux Kernel 6.x) |
-| **Physical Interface** | Board Port ENET0 (Top Port) - Marvell 88E1111 PHY |
-| **Network Protocol** | Custom MII Layer-2/3/4 Processing Stack (No Soft Processor / IP Stack-less) |
-| **Ethernet Speed** | Fast Ethernet 100 Mbps (MII Single Data Rate @ 25 MHz) |
-| **Crypto Standard** | FIPS 180-4 SHA-256 (256-bit Digest Output) |
-| **Addressing** | FPGA Target: `192.168.137.200` (`02:00:00:00:00:01`) \| Host: `192.168.137.100` |
-| **UDP Service Port**| Cổng `5000` (Bidirectional Datagram Execution) |
-
+| Hardware Platform | Terasic DE2-115 (Cyclone IV EP4CE115) + Raspberry Pi 5 (Linux 64-bit) |
+| Physical Interface | Board Port ENET0 (Marvell 88E1111 PHY) |
+| Network Protocol | RGMII Gigabit Ethernet (1000 Mbps @ 125 MHz DDR) |
+| Packet Processing Logic | Hardware-only FSM Parser (Stack-less L2/L3/L4, zero soft processor) |
+| Crypto Standard | SHA-256 Hasher (Pipelined 512-bit block processing) & ECC hardware accelerator |
 ---
 
 ## Quy trình test băng thông mạng giữa 2 thiết bị
